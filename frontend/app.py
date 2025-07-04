@@ -88,7 +88,7 @@ logger = detection_logger
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DETECT_FOLDER'] = DETECT_FOLDER
 # 在app配置部分添加DeepSeek API配置
-DEEPSEEK_API_KEY = "sk-b34cff67e35f46f686d1423c0b0bcd35"
+DEEPSEEK_API_KEY = "sk-XXX"
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 
 
