@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv12 AI Object Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .custom-select {
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .custom-select select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .custom-select::after {
+            content: '▼';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            pointer-events: none;
+        }
+
+        .custom-select select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            background: #f8fafc;
+            transition: all 0.3s ease;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .file-input-display:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+        }
+
+        .file-input-display.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #a0aec0;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+
+        .file-selected {
+            color: #38a169;
+            font-weight: 600;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e2e8f0;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .results-header h2 {
+            font-size: 2rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .detection-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .detections-list {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .detections-list h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .detections-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .detections-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 1.1rem;
+        }
+
+        .detections-list li:last-child {
+            border-bottom: none;
+        }
+
+        .detection-text {
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .confidence-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .image-container {
+            text-align: center;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 2px solid #e2e8f0;
+        }
+
+        .no-detections {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-size: 1.1rem;
+            background: #fff5f5;
+            border-radius: 12px;
+            border: 2px dashed #fed7d7;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .no-models-warning {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-card {
+                padding: 25px;
+            }
+
+            .detection-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .detections-list li {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+        .ai-advice-section {
+            background: linear-gradient(135deg, #e6f3ff 0%, #f0f9ff 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 2px solid #bfdbfe;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.1);
+        }
+
+        .ai-advice-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .ai-advice-header h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .ai-advice-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            line-height: 1.8;
+            color: #374151;
+            font-size: 1rem;
+            white-space: pre-line;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .ai-disclaimer {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #92400e;
+        }
+
+        .ai-disclaimer strong {
+            color: #b45309;
+        }
+
+        .ai-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .ai-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 YOLO肿瘤检测系统</h1>
+            <p>上传图片以 AI 精度检测对象</p>
+        </div>
+
+        <!-- 在 index.html 的 header 部分后添加导航链接 -->
+        <div class="nav-links" style="text-align: center; margin-bottom: 30px;">
+            <a href="/logs" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 25px; margin: 0 10px; transition: all 0.3s ease;">
+                📊 查看检测日志
+            </a>
+            <a href="/team" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 25px; margin: 0 10px; transition: all 0.3s ease;">
+                👥 小组成员
+            </a>
+        </div>
+
+        <div class="main-card">
+            <div class="upload-section">
+                <h2 style="margin-bottom: 25px; color: #2d3748; font-size: 1.5rem;">上传图像</h2>
+
+                <form method="POST" enctype="multipart/form-data" id="detectionForm">
+                    <div class="form-group">
+                        <label for="model-select">🤖 选择模型:</label>
+                        <div class="custom-select">
+                            <select name="model" id="model-select" required>
+                                {% if models %}
+                                    {% for model_file in models %}
+                                        <option value="{{ model_file }}" {% if model_file == selected_model %}selected{% endif %}>
+                                            {{ model_file }}
+                                        </option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" disabled>在“model”文件夹中未找到模型</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        {% if not models %}
+                            <div class="no-models-warning">
+                                ⚠️ 在“model”文件夹中未找到模型文件 （.pt）。请添加模型文件以继续。
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image-upload">📸 上传图片:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="image" id="image-upload" accept="image/*" required>
+                            <div class="file-input-display" id="fileDisplay">
+                                <div>
+                                    <div class="upload-icon">📎</div>
+                                    <div class="upload-text">点击浏览或在此处拖放您的图片</div>
+                                    <div style="font-size: 0.9rem; color: #a0aec0; margin-top: 5px;">
+                                        支持 JPG、PNG、GIF 格式
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn" {% if not models %}disabled{% endif %}>
+                        🚀 检测对象
+                    </button>
+                </form>
+
+                <div class="loading" id="loadingDiv">
+                    <div class="spinner"></div>
+                    <p>AI 正在分析您的图像...请稍候</p>
+                </div>
+            </div>
+
+            {% if prediction %}
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2>✨ {{ prediction }}</h2>
+                        {% if selected_model %}
+                            <p>Model used: <strong>{{ selected_model }}</strong></p>
+                        {% endif %}
+                    </div>
+
+                    {% if detections %}
+                        <div class="detection-stats">
+                            <div class="stat-card">
+                                <div class="stat-number">{{ detections|length }}</div>
+                                <div class="stat-label">{% if detections|length == 1 and detections[0] == "No objects detected." %}No Objects{% else %}Objects Found{% endif %}</div>
+                            </div>
+                            {% if detections[0] != "No objects detected." %}
+                                <div class="stat-card">
+                                    <div class="stat-number">🎯</div>
+                                    <div class="stat-label">检测完成</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number">AI</div>
+                                    <div class="stat-label">分析者</div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="detections-list">
+                            <h3>🎯 检测结果:</h3>
+                            {% if detections[0] == "No objects detected." %}
+                                <div class="no-detections">
+                                    <div style="font-size: 2rem; margin-bottom: 10px;">🔍</div>
+                                    <div>{{ detections[0] }}</div>
+                                    <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">
+                                        尝试上传其他图像或使用其他模型
+                                    </div>
+                                </div>
+                            {% else %}
+                                <ul>
+                                    {% for item in detections %}
+                                        <li>
+                                            <span class="detection-text">
+                                                {% set parts = item.split(': ') %}
+                                                {{ parts[0] }}
+                                            </span>
+                                            {% if parts|length > 1 %}
+                                                <span class="confidence-highlight">{{ parts[1] }}</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+
+                        <!-- 【修正部分】将获取AI建议的按钮和相关容器放在这里 -->
+                        {% if detections[0] != "No objects detected." %}
+                            <div class="form-group" style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+                                <button type="button" id="getAdviceBtn" class="submit-btn" style="width: auto; padding: 15px 30px; font-size: 1.1rem;">
+                                    🧠 获取AI医学建议
+                                </button>
+                            </div>
+                        {% endif %}
+
+                    {% endif %} <!-- 这是关键的、可能被误删的 endif -->
+
+
+                    <!-- AI建议加载状态和显示容器 -->
+                    <div class="ai-loading" id="aiLoadingDiv">
+                        <div class="ai-spinner"></div>
+                        <p>AI正在分析检测结果并生成医学建议...</p>
+                    </div>
+
+                    <div id="aiAdviceContainer" style="display: none;">
+                        <div class="ai-advice-section">
+                            <div class="ai-advice-header">
+                                <div style="font-size: 1.5rem;">🤖</div>
+                                <h3>AI医学建议</h3>
+                            </div>
+                            <div class="ai-advice-content" id="aiAdviceContent"></div>
+                            <div class="ai-disclaimer">
+                                <strong>⚠️ 重要提醒：</strong> 以上建议由AI生成，仅供参考，不能替代专业医生的诊断和治疗建议。如有健康问题，请及时咨询专业医生。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 在AI建议容器后添加PDF生成部分 -->
+                    <div id="pdfGenerationSection" style="display: none; margin-top: 30px;">
+                        <div class="form-group" style="text-align: center;">
+                            <button type="button" id="generatePdfBtn" class="submit-btn" style="width: auto; padding: 15px 30px; font-size: 1.1rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                                📄 生成PDF报告
+                            </button>
+                        </div>
+
+                        <div class="ai-loading" id="pdfLoadingDiv" style="display: none;">
+                            <div class="ai-spinner"></div>
+                            <p>正在生成PDF报告...</p>
+                        </div>
+
+                        <div id="pdfResultContainer" style="display: none; text-align: center; margin-top: 20px;">
+                            <div style="background: #f0fff4; border: 2px solid #68d391; border-radius: 12px; padding: 20px;">
+                                <div style="font-size: 2rem; margin-bottom: 10px;">✅</div>
+                                <h3 style="color: #2f855a; margin-bottom: 15px;">PDF报告生成成功！</h3>
+                                <a id="downloadPdfLink" href="#" download class="submit-btn" style="display: inline-block; text-decoration: none; width: auto; padding: 12px 25px; font-size: 1rem;">
+                                    📥 下载PDF报告
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if image_path %}
+                        <div class="image-container">
+                            <h3 style="margin-bottom: 20px; color: #2d3748;">📊 检测可视化:</h3>
+                            <img src="{{ url_for('static', filename=image_path) }}?t={{ config['SEND_FILE_MAX_AGE_DEFAULT'] }}"
+                                 alt="Detection Result" class="result-image">
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endif %}
+            <!-- 到这里结束替换 -->
+        </div>
+    </div>
+
+    <script>
+        // File upload interactions
+        const fileInput = document.getElementById('image-upload');
+        const fileDisplay = document.getElementById('fileDisplay');
+        const form = document.getElementById('detectionForm');
+        const loadingDiv = document.getElementById('loadingDiv');
+        const submitBtn = document.getElementById('submitBtn');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                fileDisplay.innerHTML = `
+                    <div>
+                        <div class="upload-icon">✅</div>
+                        <div class="upload-text file-selected">${file.name}</div>
+                        <div style="font-size: 0.9rem; color: #38a169; margin-top: 5px;">
+                            准备检测！ File size: ${(file.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // 拖放功能
+        fileDisplay.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileDisplay.classList.add('dragover');
+        });
+
+        fileDisplay.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileDisplay.classList.remove('dragover');
+        });
+
+        fileDisplay.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileDisplay.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                fileInput.files = files;
+                const file = files[0];
+                fileDisplay.innerHTML = `
+                    <div>
+                        <div class="upload-icon">✅</div>
+                        <div class="upload-text file-selected">${file.name}</div>
+                        <div style="font-size: 0.9rem; color: #38a169; margin-top: 5px;">
+                            准备检测！ File size: ${(file.size / 1024 / 1024).toFixed(2)} MB
+                        </div>
+                    </div>
+                `;
+            }
+        });
+        // 【重大修改】处理 "获取AI建议" 按钮的逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            const getAdviceBtn = document.getElementById('getAdviceBtn');
+            const aiLoadingDiv = document.getElementById('aiLoadingDiv');
+            const aiAdviceContainer = document.getElementById('aiAdviceContainer');
+            const aiAdviceContent = document.getElementById('aiAdviceContent');
+
+            // PDF生成相关元素
+            const pdfGenerationSection = document.getElementById('pdfGenerationSection');
+            const generatePdfBtn = document.getElementById('generatePdfBtn');
+            const pdfLoadingDiv = document.getElementById('pdfLoadingDiv');
+            const pdfResultContainer = document.getElementById('pdfResultContainer');
+            const downloadPdfLink = document.getElementById('downloadPdfLink');
+
+            // 用于存储AI建议内容和其他数据
+            let currentDetections = [];
+            let currentAiAdvice = '';
+            let currentModelName = '';
+            let currentImageFilename = '';
+
+            if (getAdviceBtn) {
+                // 收集检测结果
+                const detectionItems = document.querySelectorAll('.detections-list ul li');
+                currentDetections = Array.from(detectionItems).map(item => {
+                    return item.innerText.replace(/\s+/g, ' ').trim();
+                });
+
+                // 获取模型名称
+                const modelNameElement = document.querySelector('.results-header p strong');
+                if (modelNameElement) {
+                    currentModelName = modelNameElement.textContent;
+                }
+
+                // 从图像路径中提取文件名
+                const resultImage = document.querySelector('.result-image');
+                if (resultImage) {
+                    const imageSrc = resultImage.src;
+                    const matches = imageSrc.match(/detections\/(.+?)(?:\?|$)/);
+                    if (matches) {
+                        currentImageFilename = matches[1];
+                    }
+                }
+
+                // 显示PDF生成区域
+                pdfGenerationSection.style.display = 'block';
+                const originalFetch = getAdviceBtn.addEventListener;
+                getAdviceBtn.addEventListener('click', function() {
+                    // 1. UI准备：显示加载，禁用按钮等
+                    aiLoadingDiv.style.display = 'block';
+                    getAdviceBtn.disabled = true;
+                    getAdviceBtn.style.opacity = '0.6';
+                    getAdviceBtn.textContent = '🧠 正在生成...';
+
+                    // 清空上次的内容并显示容器
+                    aiAdviceContent.innerText = '';
+                    aiAdviceContainer.style.display = 'block';
+
+                    // 2. 从页面收集检测结果
+                    const detectionItems = document.querySelectorAll('.detections-list ul li');
+                    const detections = Array.from(detectionItems).map(item => {
+                        return item.innerText.replace(/\s+/g, ' ').trim();
+                    });
+
+                    // 3. 使用 EventSource 建立流式连接
+                    const eventSource = new EventSource('/get-ai-advice', {
+                        method: 'POST', // 注意：EventSource 标准上不支持POST，但很多浏览器/库实现了
+                                        // 为此我们需要一个 polyfill 或者调整后端。
+                                        // 但为了简单起见，我们先调整后端来适应GET，或者使用一个变通方法
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ detections: detections })
+                    });
+
+                    // **标准 EventSource 不支持 POST！**
+                    // 我们仍然使用 fetch，但读取其流式 body。
+                    // --- 推荐的、健壮的前端流式处理方法 ---
+                    fetch('/get-ai-advice', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ detections: currentDetections })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应错误');
+                        }
+                        // 获取可读流的读取器
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
+                        let accumulatedAdvice = ''; // 累积AI建议内容
+
+                        // 定义一个函数来递归读取流
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    // 流结束
+                                    currentAiAdvice = accumulatedAdvice;
+                                    aiLoadingDiv.style.display = 'none';
+                                    getAdviceBtn.style.display = 'none'; // 任务完成，隐藏按钮
+                                    return;
+                                }
+
+                                // 解码收到的数据块
+                                const chunk = decoder.decode(value, { stream: true });
+
+                                // SSE 可能会在一个数据块中包含多个事件，需要分割处理
+                                const lines = chunk.split('\n\n');
+                                lines.forEach(line => {
+                                    if (line.startsWith('data: ')) {
+                                        try {
+                                            const jsonData = line.substring(6);
+                                            const data = JSON.parse(jsonData);
+
+                                            if (data.error) {
+                                                aiAdviceContent.innerText += data.error;
+                                                accumulatedAdvice += data.error;
+                                                reader.cancel();
+                                                return;
+                                            }
+
+                                            if (data.status === 'done') {
+                                                // 后端发来了完成信号
+                                                return;
+                                            }
+
+                                            if (data.content) {
+                                                // 将新的内容追加到显示区域
+                                                aiAdviceContent.innerText += data.content;
+                                                accumulatedAdvice += data.content; // 累积内容
+                                                aiAdviceContent.scrollTop = aiAdviceContent.scrollHeight;
+                                            }
+                                        } catch (e) {
+                                            console.error("解析JSON失败:", line);
+                                        }
+                                    }
+                                });
+                                // 继续读取下一块数据
+                                push();
+                            });
+                        }
+                        push(); // 开始读取
+                    })
+                    .catch(error => {
+                        console.error('获取AI建议时出错:', error);
+                        aiAdviceContent.innerText = '抱歉，获取AI建议时发生网络错误。请稍后再试。';
+                        aiLoadingDiv.style.display = 'none';
+                        // 让用户可以重试
+                        getAdviceBtn.disabled = false;
+                        getAdviceBtn.style.opacity = '1';
+                        getAdviceBtn.textContent = '🧠 获取AI医学建议';
+                    });
+                });
+            }
+            // PDF生成按钮点击处理
+            if (generatePdfBtn) {
+                generatePdfBtn.addEventListener('click', function() {
+                    // 显示加载状态
+                    pdfLoadingDiv.style.display = 'block';
+                    generatePdfBtn.disabled = true;
+                    generatePdfBtn.style.opacity = '0.6';
+                    generatePdfBtn.textContent = '📄 生成中...';
+
+                    // 准备发送的数据
+                    const pdfData = {
+                        detections: currentDetections,
+                        ai_advice: currentAiAdvice,
+                        model_name: currentModelName,
+                        image_filename: currentImageFilename
+                    };
+
+                    // 发送PDF生成请求
+                    fetch('/generate-pdf', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(pdfData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        pdfLoadingDiv.style.display = 'none';
+
+                        if (data.success) {
+                            // PDF生成成功
+                            downloadPdfLink.href = data.pdf_url;
+                            downloadPdfLink.download = data.filename;
+                            pdfResultContainer.style.display = 'block';
+                            generatePdfBtn.style.display = 'none'; // 隐藏生成按钮
+                        } else {
+                            // PDF生成失败
+                            alert('PDF生成失败：' + (data.error || '未知错误'));
+                            generatePdfBtn.disabled = false;
+                            generatePdfBtn.style.opacity = '1';
+                            generatePdfBtn.textContent = '📄 生成PDF报告';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('PDF生成错误:', error);
+                        alert('PDF生成时发生网络错误，请稍后再试。');
+                        pdfLoadingDiv.style.display = 'none';
+                        generatePdfBtn.disabled = false;
+                        generatePdfBtn.style.opacity = '1';
+                        generatePdfBtn.textContent = '📄 生成PDF报告';
+                    });
+                });
+            }
+        });
+        // 具有加载状态的表单提交
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('image-upload');
+            const modelSelect = document.getElementById('model-select');
+            //const aiLoadingDiv = document.getElementById('aiLoadingDiv');
+
+            if (!fileInput.files[0] || !modelSelect.value) {
+                e.preventDefault();
+                alert('请同时选择模型和图像文件。');
+                return;
+            }
+
+            // 显示加载状态
+            submitBtn.innerHTML = '🔄 Processing...';
+            submitBtn.disabled = true;
+            loadingDiv.style.display = 'block';
+
+        });
+
+        // 如果未选择文件，则重置页面加载时的文件显示
+        window.addEventListener('load', function() {
+            if (!fileInput.files[0]) {
+                fileDisplay.innerHTML = `
+                    <div>
+                        <div class="upload-icon">📎</div>
+                        <div class="upload-text">点击浏览或在此处拖放您的图片</div>
+                        <div style="font-size: 0.9rem; color: #a0aec0; margin-top: 5px;">
+                            Supports JPG, PNG, GIF formats
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

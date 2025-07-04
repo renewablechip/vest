@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>检测日志 - YOLO检测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .log-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.3);
+        }
+
+        .logs-container {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+        }
+
+        .log-entry {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .log-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .log-timestamp {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .log-level {
+            color: #38a169;
+            font-weight: 700;
+        }
+
+        .log-content {
+            color: #2d3748;
+            margin-top: 5px;
+        }
+
+        .no-logs {
+            text-align: center;
+            color: #718096;
+            font-size: 1.1rem;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .log-stats {
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+        .log-details {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .log-details strong {
+            color: #2d3748;
+        }
+
+        .log-content {
+            background: #f7fafc;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .log-content strong {
+            color: #2d3748;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 检测日志</h1>
+            <p>查看系统检测历史记录</p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">🏠 返回首页</a>
+            <a href="/logs">🔄 刷新日志</a>
+        </div>
+
+        <div class="main-card">
+            <div class="controls">
+                <div class="log-stats">
+                    <div class="stat-item">
+                        📝 显示最近 {{ logs|length }} 条记录
+                    </div>
+                    <div class="stat-item">
+                        🕒 实时更新
+                    </div>
+                </div>
+                <button class="clear-btn" onclick="clearLogs()">
+                    🗑️ 清理日志
+                </button>
+            </div>
+
+            <div class="logs-container">
+                {% if logs %}
+                    {% for log in logs %}
+                        <div class="log-entry">
+                            {% if '检测记录' in log %}
+                                {% set parts = log.split(' | ') %}
+                                {% if parts|length >= 5 %}
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <div>
+                                            <span class="log-timestamp">{{ parts[1].replace('时间:', '') }}</span>
+                                            <span class="log-level" style="background: #48bb78; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">检测</span>
+                                        </div>
+                                    </div>
+                                    <div class="log-details" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem;">
+                                        <div><strong>模型:</strong> {{ parts[2].replace('模型:', '') }}</div>
+                                        <div><strong>图片:</strong> {{ parts[3].replace('图片:', '') }}</div>
+                                    </div>
+                                    <div class="log-content" style="margin-top: 10px; padding: 10px; background: #f7fafc; border-radius: 6px;">
+                                        <strong>结果:</strong> {{ parts[4].replace('结果:', '') }}
+                                    </div>
+                                {% else %}
+                                    <div class="log-content">{{ log }}</div>
+                                {% endif %}
+                            {% else %}
+                                <div class="log-content">{{ log }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-logs">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">📋</div>
+                        <div>暂无检测日志</div>
+                        <div style="font-size: 0.9rem; margin-top: 10px; opacity: 0.7;">
+                            执行检测后日志会显示在这里
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function clearLogs() {
+            if (confirm('确定要清理所有日志吗？此操作不可恢复。')) {
+                fetch('/clear-logs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('日志已清理');
+                        window.location.reload();
+                    } else {
+                        alert('清理失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('清理失败：' + error.message);
+                });
+            }
+        }
+
+        // 自动刷新日志（每30秒）
+        setInterval(function() {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

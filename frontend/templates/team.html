@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小组成员 - YOLOv12 AI Object Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .back-link {
+            display: inline-block;
+            color: white;
+            text-decoration: none;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .team-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .team-title {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .member-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .member-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .member-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .member-id {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        @media (max-width: 768px) {
+            .members-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .team-card {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 小组成员</h1>
+        </div>
+
+        <a href="/" class="back-link">← 返回主页</a>
+
+        <div class="team-card">
+            <h2 class="team-title">🎓 小组成员</h2>
+
+            <div class="members-grid">
+                <div class="member-card">
+                    <div class="member-icon">👨‍💻组长</div>
+                    <div class="member-name">时泽令</div>
+                    <div class="member-id">学号: 2022302663</div>
+                </div>
+
+                <div class="member-card">
+                    <div class="member-icon">👨‍💻组员</div>
+                    <div class="member-name">吕裕曈</div>
+                    <div class="member-id">学号: 2022300677</div>
+                </div>
+
+                <div class="member-card">
+                    <div class="member-icon">👨‍💻组员</div>
+                    <div class="member-name">方家璇</div>
+                    <div class="member-id">学号: 202101002</div>
+                </div>
+
+                <div class="member-card">
+                    <div class="member-icon">👨‍💻组员</div>
+                    <div class="member-name">万家珩</div>
+                    <div class="member-id">学号: 2022302670</div>
+                </div>
+
+                <div class="member-card">
+                    <div class="member-icon">👨‍💻组员</div>
+                    <div class="member-name">张子恒</div>
+                    <div class="member-id">学号: 2022300393</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

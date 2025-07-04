@@ -1,0 +1,6 @@
+path: C:\Users\Administrator\vest\yoloserver\data
+train: C:\Users\Administrator\vest\yoloserver\data\train\images
+val: C:\Users\Administrator\vest\yoloserver\data\val\images
+test: C:\Users\Administrator\vest\yoloserver\data\test\images
+nc: 2
+names: [no-vest, vest]
